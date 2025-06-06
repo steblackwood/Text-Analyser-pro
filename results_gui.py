@@ -1,54 +1,126 @@
 import tkinter as tk
-from tkinter import ttk, scrolledtext
-from core import count_words, count_sentences, most_frequent_words, average_word_length
-from sentiment import analyze_sentiment
-from keywords import find_keywords
+from tkinter import scrolledtext
 
 def display_results(file_path, keywords):
-    # Read the file
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            text = f.read()
-    except Exception as e:
-        print("Error reading file:", e)
-        return
+    # Import analysis modules here to avoid circular imports
+    import core
+    import sentiment
+    import keywords as kw
 
-    # Run analysis
-    word_count = count_words(text)
-    sentence_count = count_sentences(text)
-    frequent_words = most_frequent_words(text)
-    avg_word_length = average_word_length(text)
-    sentiment = analyze_sentiment(text)
-    keyword_data = find_keywords(text, keywords)
+    # Read file content
+    with open(file_path, 'r', encoding='utf-8') as f:
+        text = f.read()
 
-    # Create results window
+    # Perform analyses
+    word_count = core.count_words(text)
+    sentence_count = core.count_sentences(text)
+    most_freq = core.most_frequent_words(text)
+    avg_word_len = core.average_word_length(text)
+    sentiment_result = sentiment.analyze_sentiment(text)
+    keywords_found = kw.find_keywords(text, keywords)
+
+    # Create the results window
     root = tk.Tk()
     root.title("Text Analyzer - Results")
-    root.geometry("600x500")
+    root.geometry("700x600")
+    root.configure(bg="#f4f4f4")
+    root.resizable(False, False)
 
-    title = tk.Label(root, text="Analysis Results", font=("Helvetica", 16, "bold"))
-    title.pack(pady=10)
+    # Title label
+    title_label = tk.Label(
+        root,
+        text="Analysis Results",
+        font=("Segoe UI", 20, "bold"),
+        bg="#f4f4f4",
+        fg="#333"
+    )
+    title_label.pack(pady=20)
 
-    # Use a scrolled text box to show results
-    result_box = scrolledtext.ScrolledText(root, width=70, height=25, wrap=tk.WORD)
-    result_box.pack(padx=10, pady=10)
+    # Frame for stats
+    stats_frame = tk.Frame(root, bg="#f4f4f4")
+    stats_frame.pack(pady=10, padx=20, fill='x')
 
-    result_box.insert(tk.END, f"Total Words: {word_count}\n")
-    result_box.insert(tk.END, f"Total Sentences: {sentence_count}\n")
-    result_box.insert(tk.END, f"Average Word Length: {avg_word_length}\n\n")
+    # Stats labels
+    stats = {
+        "Word Count": word_count,
+        "Sentence Count": sentence_count,
+        "Average Word Length": avg_word_len,
+        "Sentiment": sentiment_result
+    }
 
-    result_box.insert(tk.END, "Most Frequent Words:\n")
-    for word, count in frequent_words:
-        result_box.insert(tk.END, f"  {word}: {count}\n")
+    for key, val in stats.items():
+        label = tk.Label(
+            stats_frame,
+            text=f"{key}: {val}",
+            font=("Segoe UI", 14),
+            bg="#f4f4f4",
+            anchor="w"
+        )
+        label.pack(fill='x', pady=2)
 
-    result_box.insert(tk.END, "\nSentiment Analysis:\n")
-    result_box.insert(tk.END, f"  Polarity: {sentiment['polarity']}\n")
-    result_box.insert(tk.END, f"  Subjectivity: {sentiment['subjectivity']}\n")
+    # Most frequent words
+    freq_label = tk.Label(
+        root,
+        text="Most Frequent Words:",
+        font=("Segoe UI", 16, "bold"),
+        bg="#f4f4f4",
+        fg="#444"
+    )
+    freq_label.pack(pady=(20, 5), anchor='w', padx=20)
 
-    result_box.insert(tk.END, "\nKeyword Counts:\n")
-    for word, count in keyword_data.items():
-        result_box.insert(tk.END, f"  {word}: {count}\n")
+    freq_words_text = ', '.join([f"{word} ({count})" for word, count in most_freq])
+    freq_words_label = tk.Label(
+        root,
+        text=freq_words_text,
+        font=("Segoe UI", 12),
+        bg="#f4f4f4",
+        wraplength=650,
+        justify="left"
+    )
+    freq_words_label.pack(padx=20)
 
-    result_box.config(state=tk.DISABLED)
+    # Keywords found
+    keyword_label = tk.Label(
+        root,
+        text="Keywords Found:",
+        font=("Segoe UI", 16, "bold"),
+        bg="#f4f4f4",
+        fg="#444"
+    )
+    keyword_label.pack(pady=(20, 5), anchor='w', padx=20)
+
+    keywords_text = ', '.join(keywords_found) if keywords_found else "No keywords found."
+    keywords_found_label = tk.Label(
+        root,
+        text=keywords_text,
+        font=("Segoe UI", 12),
+        bg="#f4f4f4",
+        wraplength=650,
+        justify="left"
+    )
+    keywords_found_label.pack(padx=20)
+
+    # Text content preview
+    preview_label = tk.Label(
+        root,
+        text="Text Preview:",
+        font=("Segoe UI", 16, "bold"),
+        bg="#f4f4f4",
+        fg="#444"
+    )
+    preview_label.pack(pady=(20, 5), anchor='w', padx=20)
+
+    text_preview = scrolledtext.ScrolledText(
+        root,
+        width=80,
+        height=15,
+        font=("Segoe UI", 11),
+        bg="white",
+        fg="#222",
+        wrap=tk.WORD
+    )
+    text_preview.pack(padx=20, pady=(0, 20))
+    text_preview.insert(tk.END, text[:2000] + ("..." if len(text) > 2000 else ""))
+    text_preview.config(state=tk.DISABLED)  # Make read-only
 
     root.mainloop()
