@@ -1,0 +1,5 @@
+# Python 3.8 or above required
+# tkinter is usually pre-installed with Python
+
+pip install textblob
+pip install nltk
