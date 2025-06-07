@@ -28,7 +28,7 @@ Demo
 Installation
 
 1. Clone the repository
-   git clone https://github.com/yourusername/text-analyzer-pro.git
+   git clone https://github.com/KO1RAK/text-analyzer-pro.git
    cd text-analyzer-pro
 
 2. Install dependencies
